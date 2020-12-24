@@ -13,13 +13,14 @@ setup(
     ],
     install_requires=['setuptools'],
     zip_safe=True,
-    maintainer='yoshida',
+    maintainer='Yukiho-YOSHIEDA',
     maintainer_email='is0436er@ed.ritsumei.ac.jp',
-    description='TODO: Package description',
-    license='TODO: License declaration',
+    description='人物の推定をするROS2パッケージ',
+    license='MIT License',
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
+            'people_detection_ros2 = people_detection_ros2.people_detection_node:main',
         ],
     },
 )
