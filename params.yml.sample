@@ -1,0 +1,7 @@
+people_detection_node:
+  ros__parameters:
+    is_debug_mode: true
+    trained_model_path: "/model/path"
+    score_threshold: 0.3
+    is_image_compressed: true
+    image_node: "/image"
