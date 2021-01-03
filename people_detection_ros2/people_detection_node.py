@@ -50,7 +50,7 @@ class PeopleDetectionNode(Node):
         self.get_logger().info('ImageNode : ' + image_node)
         self.get_logger().info('IsImageCompressed : ' + str(is_image_compressed))
 
-        self._publisher = self.create_publisher(Image, '/people_detection', 10)
+        self._publisher = self.create_publisher(CompressedImage, '/people_detection', 10)
 
         if is_image_compressed:
             self.subscription = self.create_subscription(CompressedImage, image_node,
@@ -72,7 +72,7 @@ class PeopleDetectionNode(Node):
 
         result = self.people_detection_wrapper.detect(img)
 
-        result_image: Image = self.bridge.cv2_to_imgmsg(result)
+        result_image: Image = self.bridge.cv2_to_compressed_imgmsg(result)
         result_image.header.stamp = timestamp
         self._publisher.publish(result_image)
 
@@ -96,9 +96,10 @@ class PeopleDetectionNode(Node):
             cv2.imshow('Result', cv2.hconcat([img, debug_img, combine_img]))
             cv2.waitKey(1)
 
+            print(f'[{datetime.datetime.now()}] fps : {self.fps}', end='\r')
+
     def get_img_callback(self, image_raw: Image) -> None:
         try:
-            print('[' + str(datetime.datetime.now()) + '] Image received', end='\r')
             image: np.ndarray = self.bridge.imgmsg_to_cv2(image_raw)
             self.publish_from_img(image, image_raw.header.stamp)
         except Exception as err:
@@ -106,7 +107,6 @@ class PeopleDetectionNode(Node):
 
     def get_img_compressed_callback(self, image_raw: CompressedImage) -> None:
         try:
-            print('[' + str(datetime.datetime.now()) + '] Compressed image received', end='\r')
             image: np.ndarray = self.bridge.compressed_imgmsg_to_cv2(image_raw)
             self.publish_from_img(image, image_raw.header.stamp)
 
