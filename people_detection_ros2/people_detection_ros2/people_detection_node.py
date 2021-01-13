@@ -5,6 +5,7 @@ import numpy as np
 import rclpy
 from builtin_interfaces.msg import Time
 from cv_bridge import CvBridge
+from people_detection_ros2_msg.msg import People, BoundingBox
 from rcl_interfaces.msg import ParameterDescriptor, ParameterType
 from rclpy.node import Node
 from sensor_msgs.msg import Image, CompressedImage
@@ -50,7 +51,7 @@ class PeopleDetectionNode(Node):
         self.get_logger().info('ImageNode : ' + image_node)
         self.get_logger().info('IsImageCompressed : ' + str(is_image_compressed))
 
-        self._publisher = self.create_publisher(CompressedImage, '/people_detection', 10)
+        self._publisher = self.create_publisher(People, '/people_detection', 10)
 
         if is_image_compressed:
             self.subscription = self.create_subscription(CompressedImage, image_node,
@@ -70,13 +71,22 @@ class PeopleDetectionNode(Node):
     def publish_from_img(self, img: np.ndarray, timestamp: Time):
         self.frame_count += 1
 
-        result = self.people_detection_wrapper.detect(img)
+        masked_img, boxes = self.people_detection_wrapper.detect(img)
 
-        result_image: Image = self.bridge.cv2_to_compressed_imgmsg(result)
-        result_image.header.stamp = timestamp
-        self._publisher.publish(result_image)
+        people = People()
+        people.mask = self.bridge.cv2_to_compressed_imgmsg(masked_img, 'png')
+
+        for box in boxes:
+            bounding_box = BoundingBox()
+            bounding_box.x, bounding_box.y, bounding_box.width, bounding_box.height = list(map(int, box))
+            people.person_bouding_box_list.append(bounding_box)
+
+        people.header.stamp = timestamp
+        self._publisher.publish(people)
 
         if self.is_debug_mode:
+            result_img = np.zeros(img.shape[:2]).astype(np.uint8)
+
             if self.frame_count % self.measurement_count == 0:
                 self.tm.stop()
                 self.fps = (self.frame_count - self.before_frame) / self.tm.getTimeSec()
@@ -84,14 +94,17 @@ class PeopleDetectionNode(Node):
                 self.tm.reset()
                 self.tm.start()
 
-            debug_img = cv2.cvtColor(result, cv2.COLOR_GRAY2BGR)
+            debug_img = cv2.cvtColor(result_img, cv2.COLOR_GRAY2BGR)
             cv2.putText(debug_img, "frame = " + str(self.frame_count), (0, 50), cv2.FONT_HERSHEY_PLAIN, 3, (0, 255, 0))
             cv2.putText(debug_img, 'FPS: {:.2f}'.format(self.fps),
                         (0, 100), cv2.FONT_HERSHEY_PLAIN, 3, (0, 255, 0))
 
             combine_img = np.zeros_like(img)
             for i in range(img.shape[2]):
-                combine_img[:, :, i] = np.where(result > 0, img[:, :, i], 0)
+                combine_img[:, :, i] = np.where(masked_img > 0, img[:, :, i], 0)
+            for box in boxes:
+                x, y, width, height = box
+                cv2.rectangle(combine_img, (x, y), (x + width, y + height), (0, 0, 255), thickness=1)
 
             cv2.imshow('Result', cv2.hconcat([img, debug_img, combine_img]))
             cv2.waitKey(1)

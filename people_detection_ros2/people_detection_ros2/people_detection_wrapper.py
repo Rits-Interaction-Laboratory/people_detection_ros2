@@ -1,5 +1,4 @@
-import os
-from typing import Any
+from typing import Any, List, Tuple
 
 import numpy as np
 import torch
@@ -43,7 +42,7 @@ class PeopleDetectionWrapper:
             self.net.detect.use_fast_nms = True
             cfg.mask_proto_debug = False
 
-    def detect(self, image: np.ndarray) -> np.ndarray:
+    def detect(self, image: np.ndarray) -> Tuple[np.ndarray, List[np.ndarray]]:
         """
         Note: If 'undo_transform=False' then 'im_h' and 'im_w' are allowed to be 'None'.
         """
@@ -71,12 +70,13 @@ class PeopleDetectionWrapper:
                 break
 
         masked_img = np.zeros(frame.shape[:2], np.uint8)
+        result_boxes = []
         if num_dets_to_consider == 0:
             # maskが見つからない
-            return masked_img
+            return masked_img, result_boxes
 
         if masks is None:
-            return masked_img
+            return masked_img, result_boxes
 
         for i in range(num_dets_to_consider):
             # 人間以外ははじく
@@ -84,5 +84,6 @@ class PeopleDetectionWrapper:
                 continue
             m = masks.byte().cpu().numpy()
             masked_img = np.where(m[i] > 0, 255, masked_img)
+            result_boxes.append(boxes[i])
 
-        return masked_img.astype(np.uint8)
+        return masked_img, result_boxes
