@@ -1,4 +1,6 @@
 # people_detection_ros2
+![Shigure Plugin](https://img.shields.io/badge/shigure-plugin-blue)
+
 人物の推定をするROS2パッケージ
 
 ## 動作要件
