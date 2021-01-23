@@ -70,6 +70,12 @@ class PeopleDetectionNode(Node):
 
     def publish_from_img(self, img: np.ndarray, timestamp: Time):
         self.frame_count += 1
+        if self.frame_count % self.measurement_count == 0:
+            self.tm.stop()
+            self.fps = (self.frame_count - self.before_frame) / self.tm.getTimeSec()
+            self.before_frame = self.frame_count
+            self.tm.reset()
+            self.tm.start()
 
         masked_img, boxes = self.people_detection_wrapper.detect(img)
 
@@ -87,13 +93,6 @@ class PeopleDetectionNode(Node):
         if self.is_debug_mode:
             result_img = np.zeros(img.shape[:2]).astype(np.uint8)
 
-            if self.frame_count % self.measurement_count == 0:
-                self.tm.stop()
-                self.fps = (self.frame_count - self.before_frame) / self.tm.getTimeSec()
-                self.before_frame = self.frame_count
-                self.tm.reset()
-                self.tm.start()
-
             debug_img = cv2.cvtColor(result_img, cv2.COLOR_GRAY2BGR)
             cv2.putText(debug_img, "frame = " + str(self.frame_count), (0, 50), cv2.FONT_HERSHEY_PLAIN, 3, (0, 255, 0))
             cv2.putText(debug_img, 'FPS: {:.2f}'.format(self.fps),
@@ -109,7 +108,7 @@ class PeopleDetectionNode(Node):
             cv2.imshow('Result', cv2.hconcat([img, debug_img, combine_img]))
             cv2.waitKey(1)
 
-            print(f'[{datetime.datetime.now()}] fps : {self.fps}', end='\r')
+        print(f'[{datetime.datetime.now()}] fps : {self.fps}', end='\r')
 
     def get_img_callback(self, image_raw: Image) -> None:
         try:
