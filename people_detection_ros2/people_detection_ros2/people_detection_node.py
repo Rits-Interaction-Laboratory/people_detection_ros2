@@ -8,6 +8,7 @@ from cv_bridge import CvBridge
 from people_detection_ros2_msg.msg import People, BoundingBox
 from rcl_interfaces.msg import ParameterDescriptor, ParameterType
 from rclpy.node import Node
+from rclpy.qos import QoSProfile, ReliabilityPolicy
 from sensor_msgs.msg import Image, CompressedImage
 
 from people_detection_ros2.people_detection_wrapper import PeopleDetectionWrapper
@@ -18,6 +19,9 @@ class PeopleDetectionNode(Node):
 
     def __init__(self):
         super().__init__('people_detection_node')
+
+        # QoS Settings
+        shigure_qos = QoSProfile(depth=10, reliability=ReliabilityPolicy.BEST_EFFORT)
 
         # ros params
         is_debug_mode_descriptor = ParameterDescriptor(type=ParameterType.PARAMETER_BOOL,
@@ -55,10 +59,10 @@ class PeopleDetectionNode(Node):
 
         if is_image_compressed:
             self.subscription = self.create_subscription(CompressedImage, image_node,
-                                                         self.get_img_compressed_callback, 10)
+                                                         self.get_img_compressed_callback, shigure_qos)
         else:
             self.subscription = self.create_subscription(Image, image_node,
-                                                         self.get_img_callback, 10)
+                                                         self.get_img_callback, shigure_qos)
 
         # FPS計測
         self.frame_count = 0
