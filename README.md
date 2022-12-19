@@ -10,7 +10,7 @@
 * [yolact](https://github.com/dbolya/yolact)
 
 ## 動作確認環境
-* Python 3.8.12 以上
+* Python 3.8.12
 * Ubuntu 20.04 LTS
 * ROS2 foxy
 * [yolact](https://github.com/dbolya/yolact)
