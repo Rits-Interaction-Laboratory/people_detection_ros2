@@ -5,14 +5,14 @@
 
 ## 動作要件
 * Python 3.6 以上
-* Ubuntu 18.04 LTS
-* ROS2 dashing
+* Ubuntu 20.04 LTS
+* ROS2 foxy
 * [yolact](https://github.com/dbolya/yolact)
 
 ## 動作確認環境
-* Python 3.6 以上
-* Ubuntu 18.04 LTS
-* ROS2 dashing
+* Python 3.8.12 以上
+* Ubuntu 20.04 LTS
+* ROS2 foxy
 * [yolact](https://github.com/dbolya/yolact)
   * branch : master 
   * commit hash : [57b8f2d95e62e2e649b382f516ab41f949b57239](https://github.com/dbolya/yolact/commit/57b8f2d95e62e2e649b382f516ab41f949b57239)
